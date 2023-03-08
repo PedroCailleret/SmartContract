@@ -1,6 +1,11 @@
 const { task } =  require("hardhat/config");
 
-task("uri", "Deploys the default URI builder for OtoCo Entities")
+const br = "\x1b[1m";
+const fc = "\x1b[35m";
+const bg = "\x1b[46m";
+const r = "\x1b[0m";
+
+task(`uri`, `${bg}${fc}${br}Deploys the default URI builder for OtoCo Entities${r}`)
 .addParam("master", "The current instance of OtoCoMasterV2")
 .setAction(async (taskArgs) => {
 
@@ -14,6 +19,3 @@ task("uri", "Deploys the default URI builder for OtoCo Entities")
   return [uri, masterInstance];
 });
 
-module.exports = {
-  solidity: "0.8.4",
-};

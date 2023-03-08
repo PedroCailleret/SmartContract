@@ -1,10 +1,17 @@
 const { task } = require("hardhat/config");
 require('dotenv').config();
 
-require("./accounts");
+require("./utils/accounts");
+require("./utils/verification");
+require("./utils/gas");
 require("./jurisdictions");
 require("./master");
 require("./uri");
+
+const br = "\x1b[1m";
+const fc = "\x1b[31m";
+const bg = "\x1b[47m";
+const r = "\x1b[0m";
 
 const urlBuild = 
   `https://eth-` +
@@ -18,11 +25,8 @@ const jurisdictionPrices = {
   wp: process.env.WYOMING_PRICES,
 };
 
-if(!urlBuild || !jurisdictionPrices) {
-  throw new Error("Please set your task config in a .env file");
-}
 
-task("setup", "OtoCo V2 scripts setup pusher")
+task(`setup`, `${bg}${fc}${br}OtoCo V2 scripts setup pusher${r}`)
   .setAction(async (undefined, hre) => {
 
   if(process.env.FORK_ENABLED != "false") {

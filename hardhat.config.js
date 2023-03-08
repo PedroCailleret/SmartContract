@@ -8,17 +8,23 @@ require("hardhat-tracer");
 
 require('dotenv').config();
 require("./tasks/setup");
-// require("hardhat-gas-reporter");
+require("hardhat-gas-reporter");
 
+process.removeAllListeners('warning');
 
 const alchemyApiKey = process.env.ALCHEMY_KEY;
 if (!alchemyApiKey) {
   throw new Error("Please set your ALCHEMY_KEY in a .env file");
 }
 
+const forkedNetwork = process.env.FORKED_NETWORK;
+if(!forkedNetwork) {
+  throw new Error("Please set your network forking config in a .env file");
+}
+
 const urlBuild = 
   `https://eth-` +
-  `${process.env.FORKED_NETWORK}` + 
+  `${forkedNetwork}` + 
   `.g.alchemy.com/v2/` + 
   `${process.env.ALCHEMY_KEY}`;
 
@@ -38,7 +44,7 @@ const chainIds = {
           "https://polygon-mumbai.g.alchemy.com/v2/" +
           alchemyApiKey;
         break;
-        case "polygon-mainnet":
+        case "polygon":
         jsonRpcUrl =
           "https://polygon-mainnet.g.alchemy.com/v2/" +
           alchemyApiKey;
@@ -77,7 +83,7 @@ module.exports = {
     },
     mainnet: getChainConfig("mainnet"),
     goerli: getChainConfig("goerli"),
-    polygon: getChainConfig("polygon-mainnet"),
+    polygon: getChainConfig("polygon"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
   },
   etherscan: {

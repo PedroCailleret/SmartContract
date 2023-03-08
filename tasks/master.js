@@ -2,7 +2,12 @@ const { task } =  require("hardhat/config");
 
 const defaultUrl = "https://otoco.io/dashpanel/entity/";  
 
-task("master", "Deploys a OtoCo V2 Master proxy")
+const fc = "\x1b[35m";
+const bg = "\x1b[46m";
+const r = "\x1b[0m";
+const br = "\x1b[1m";
+
+task(`master`, `${bg}${fc}${br}Deploys a OtoCo V2 Master proxy${r}`)
 
 .addParam(
   "jurisdictions", "The V2 jurisdiction addresses")

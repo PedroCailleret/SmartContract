@@ -6,12 +6,17 @@ const Reset = "\x1b[0m";
 const Bright = "\x1b[1m";
 const FgGreen = "\x1b[32m";
 const FgRed = "\x1b[31m";
+const FgCyan = "\x1b[36m";
 
-async function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function main() {
+
+    /*****************
+     * GENERAL SETUP *
+     *****************/
+
+    const networkId = network.config.chainId;
+    const [deployer] = await ethers.getSigners();
 
     let object = {}
     let badges = {}
@@ -46,7 +51,33 @@ async function main() {
     JSON.stringify(Object.values(badges[1]));
     const wyData = 
     JSON.stringify(Object.values(badges[2]));
+
+
+    /******************
+     * USER PROMPTING *
+     ******************/
+
+    console.log(
+        `\n${Bright}\t👤 Deploying contracts with ${FgCyan}${deployer.address}${Reset}`);
+
+    const deployerBalance = 
+        parseInt((await deployer.getBalance()).toString()) / 1e18;
     
+    console.log(
+        `\t${Bright}💰 Balance: ${FgCyan}${deployerBalance.toFixed(4)} ETH${Reset}\n`);
+
+    const explorer = networkId == '1' ? 'Etherscan' : networkId == '137' ? 'Polygonscan' : null;
+    
+    if (explorer != null) {
+        console.log(`${Bright} ${explorer} Gas Tracker Data: ${Reset}`);
+        await hre.run("gas", { [network.name]: true });
+    }
+
+
+    /****************
+     * ONCHAIN TASK *
+     ****************/
+
     [unincorporated, delaware, wyoming] = 
     await hre.run( "jurisdictions", { 
         up: uncPrice, 
@@ -58,12 +89,13 @@ async function main() {
     });
 
     const jurisdictions = [unincorporated, delaware, wyoming];
-    
     object.jurisdictions = jurisdictions.map(({ address }) => address);
     
-    const [deployer] = await ethers.getSigners();
-    console.log(`${Bright}👤 Contract deployed with ${deployer.address}${Reset}`, "\n");
     
+    /******************
+     * STORAGE CHECKS *
+     ******************/
+
     const jurisdictionData = {};
     
     for (const jurisdiction of jurisdictions) {
@@ -82,50 +114,24 @@ async function main() {
     }
 
     console.log(`${Bright}🚀 OtoCo V2 Jurisdictions Deployed:${Reset}`, jurisdictionData);
-        
+
     fs.writeFileSync(
         `./deploys/v2/${network.name}.json`, 
         JSON.stringify(object, undefined, 2),
     );
 
-    if (network.config.chainId != '31337') {
-        const maxTries = 8;
-        const delayTime = 10000;
-        let count = 0;
+
+    /**********************
+     * SOURCE VERIFICATON *
+     **********************/
+
+    if (networkId != '31337') {
         for (const jurisdiction of jurisdictions) {
-        do {
-            await delay(delayTime);
-            try {
-                console.log(
-                    `${Bright}Verifying contract at address` +
-                    `${jurisdiction.address}${Reset}`
-                );
-                await hre.run('verify:verify', {
-                    address: jurisdiction.address,
-                    constructorArguments: 
-                        Object.values(jurisdictionData[jurisdiction.address]),
-                });
-                console.log(
-                    `${Bright}${FgGreen}Contract at address` +
-                    `${jurisdiction.address} has been successfully verified${Reset}`);
-                break;
-            } catch (error) {
-                if (String(error).includes('Already Verified')) {
-                    console.log(
-                        `${Bright}${FgGreen}Contract at address` +
-                        `${jurisdiction.address} has already been verified${Reset}`);
-                    break;
-                };
-                console.log(
-                    `${Bright}Retrying verification of contract at address` + 
-                    `${jurisdiction.address} - attempt #${++count}, error: ${FgRed}${error}${Reset}`
-                );
-                if (count === maxTries) 
-                    console.log(
-                        `${Bright}${FgRed}Failed to verify contract at address` +
-                        `${jurisdiction.address} after ${count} attempts, error: ${error}${Reset}`);
-                }
-            } while (count < maxTries);
+            await hre.run( "verification", { 
+                addr: jurisdiction.address,
+                args: JSON.stringify(
+                        Object.values(jurisdictionData[jurisdiction.address])),
+            });
         }
     }
 }
